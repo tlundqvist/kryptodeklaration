@@ -44,14 +44,14 @@ class Konto:
         vinst = None
         omkostnad = None
         if händelse == "köp":
-            if antal < 0:
-                print("Varning: antal < 0 vid köp!")
+            if antal <= 0:
+                print("Varning: antal mindre eller lika med noll vid köp!")
             self._totbelopp += belopp
             self.innehav += antal
             self.gob = self._totbelopp / self.innehav
         elif händelse == "sälj":
             if antal > 0:
-                print("Varning: antal > 0 vid sälj!")
+                print("Varning: antal positivt vid sälj! Säljantal ska vara negativt.")
             self.innehav += antal   # antal redan < 0 vid sälj
             if self.innehav < 0:
                 print("Innehav:", self.innehav, "efter", händelse, antal, belopp)
@@ -72,6 +72,17 @@ class Konto:
             if self.innehav == 0:
                 self._totbelopp = 0
                 self.gob = 0
+        elif händelse == "ränta":
+            if antal <= 0 or belopp <= 0:
+                print("Varning: antal eller belopp negativt. Båda bör vara positiva vid ränta!")
+            # Ränta ger allt som vinst direkt
+            omkostnad = 0
+            vinst = belopp
+            self._dekl_vinst += vinst
+            # Därefter samma som köp
+            self._totbelopp += belopp
+            self.innehav += antal
+            self.gob = self._totbelopp / self.innehav
         else:
             sys.exit("Error: okänd händelse i transaktion: " + händelse)
         return omkostnad, vinst
@@ -98,7 +109,7 @@ class Konto:
         return 'Konto("%s","%s","%s","%s")' % (self.namn, self.enhet, self.innehav, self.gob)
 
 class Transaktion:
-    """Håller en transaktionsrad, "köp" eller "sälj" som händelse"""
+    """Håller en transaktionsrad, "köp", "sälj" eller "ränta" som händelse"""
     def __init__(self, datum, var, händelse, antal, valuta, belopp):
         self.datum = datum
         self.var = var
@@ -343,7 +354,7 @@ def output_results(sheet, balans, transtable):
             sheet.row_dimensions[row].height = ROWHEIGHT
             row += 1
         dsälj, dbelopp, domkostnad, dvinst = konto.get_dekl_vinst()
-        if dsälj < 0:
+        if dvinst > 0:
             sheet.cell(row=row, column=3).value = "Deklaration vinst"
             sheet.cell(row=row, column=6).value = dsälj
             sheet.cell(row=row, column=9).value = dbelopp
@@ -353,7 +364,7 @@ def output_results(sheet, balans, transtable):
                 sheet.cell(row=row, column=i).font = boldfont
             row += 1
         dsälj, dbelopp, domkostnad, dvinst = konto.get_dekl_förlust()
-        if dsälj < 0:
+        if dvinst < 0:
             sheet.cell(row=row, column=3).value = "Deklaration förlust"
             sheet.cell(row=row, column=6).value = dsälj
             sheet.cell(row=row, column=9).value = dbelopp
