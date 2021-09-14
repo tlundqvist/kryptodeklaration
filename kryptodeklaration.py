@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-# kryptodeklaration.py, Thomas Lundqvist, 2020
+# kryptodeklaration.py, Thomas Lundqvist, 2020-2021
 #
 # Räkna ut vinst, förlust och utgående genomsnittligt omkostnadsbelopp
 # 
@@ -73,6 +73,7 @@ class Konto:
                 self._totbelopp = 0
                 self.gob = 0
         elif händelse == "ränta":
+            # Ränta experimentellt, oklart hur detta egentligen ska hanteras, undvik?
             if antal <= 0 or belopp <= 0:
                 print("Varning: antal eller belopp negativt. Båda bör vara positiva vid ränta!")
             # Ränta ger allt som vinst direkt
