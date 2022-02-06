@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 #
-# kryptodeklaration.py, Thomas Lundqvist, 2020-2021
+# kryptodeklaration.py, Thomas Lundqvist, 2020-2022
 #
 # Räkna ut vinst, förlust och utgående genomsnittligt omkostnadsbelopp
 # 
 
-import sys
+import sys, datetime
 from collections import OrderedDict
 import openpyxl
 
@@ -28,6 +28,7 @@ class Konto:
         self.gob = gob
         self._totbelopp = innehav * gob
         # Summeringar för deklaration, dela upp vinst och förlust på två poster
+        # Ränteinkomster redovisas separat
         self._dekl_vinst_sälj = 0
         self._dekl_vinst_sälj_belopp = 0
         self._dekl_vinst_omkostnad = 0
@@ -36,6 +37,7 @@ class Konto:
         self._dekl_förlust_sälj_belopp = 0
         self._dekl_förlust_omkostnad = 0
         self._dekl_förlust = 0
+        self._dekl_ränta = 0
 
     def getAll(self):
         return [self.namn, self.enhet, self.innehav, self.gob]
@@ -43,6 +45,7 @@ class Konto:
     def update(self, händelse, antal, belopp):
         vinst = None
         omkostnad = None
+        ränta = None
         if händelse == "köp":
             if antal <= 0:
                 print("Varning: antal mindre eller lika med noll vid köp!")
@@ -73,20 +76,20 @@ class Konto:
                 self._totbelopp = 0
                 self.gob = 0
         elif händelse == "ränta":
-            # Ränta experimentellt, oklart hur detta egentligen ska hanteras, undvik?
+            # Ränta betraktas som köp till aktuell kurs samtidigt som samma
+            # belopp ska bokföras som ränteinkomst
             if antal <= 0 or belopp <= 0:
                 print("Varning: antal eller belopp negativt. Båda bör vara positiva vid ränta!")
-            # Ränta ger allt som vinst direkt
-            omkostnad = 0
-            vinst = belopp
-            self._dekl_vinst += vinst
+            # Ränta ger allt som ränteinkomst direkt
+            ränta = belopp
+            self._dekl_ränta += ränta
             # Därefter samma som köp
             self._totbelopp += belopp
             self.innehav += antal
             self.gob = self._totbelopp / self.innehav
         else:
             sys.exit("Error: okänd händelse i transaktion: " + händelse)
-        return omkostnad, vinst
+        return omkostnad, vinst, ränta
 
     def get_dekl_vinst(self):
         return (self._dekl_vinst_sälj,
@@ -122,6 +125,10 @@ class Transaktion:
     def getAll(self):
         return [self.datum, self.var, self.händelse, self.antal, self.valuta, self.belopp]
     
+    def __lt__(self, other):
+        """Sort på datum"""
+        return self.datum < other.datum
+        
     def __repr__(self):
         """Vänlig utskrift för print()"""
         return 'Transaktion("%s","%s","%s","%s","%s","%s")' % (
@@ -241,12 +248,21 @@ def read_transactions(sheet):
                     datum = old_datum
                 if not var or var.strip() == "":
                     var = old_var
+                if type(datum) == str:
+                    datum = datetime.datetime.strptime(datum, "%Y-%m-%d")
 #                print(datum, var, händelse, antal, valuta, belopp)
                 old_datum = datum
                 old_var = var
+                # Omvandling enheter, gillar milli BTC/ETH bättre
+                if valuta == "BTC":
+                    valuta = "mBTC"
+                    antal *= 1000
+                if valuta == "ETH":
+                    valuta = "mETH"
+                    antal *= 1000
                 trans = Transaktion(datum, var, händelse, antal, valuta, belopp)
                 translist.append(trans)
-            except TypeError:
+            except (TypeError, ValueError):
                 pass
         else:
             try:
@@ -275,6 +291,8 @@ def sort_check_transactions(balans, translist):
     transtable = {}
     for tx in translist:
         transtable.setdefault(tx.valuta, []).append(tx)
+    for valuta in transtable.keys():
+        transtable[valuta].sort()
     diff = transtable.keys() - balans.keys()   # set difference
     if len(diff) > 0:
         sys.exit("Error, några valutor saknas i inbalansen:\n" + str(diff))
@@ -283,7 +301,7 @@ def sort_check_transactions(balans, translist):
 # Skriv ut resultatfliken "Resultat"
 #
 # Skapar många små tabeller för var sin valuta med
-# extra kolumner för vinst/förlust-beräkningarna.
+# extra kolumner för vinst, förlust och ränteberäkningarna.
 #
 # Uppdaterar löpande alla konton i "balans"-dicten.
 
@@ -301,9 +319,10 @@ def output_results(sheet, balans, transtable):
     valutor = balans.keys()
     h = ["Datum","Var","Händelse","Antal+","Antal-","Valuta",
          "Belopp+", "Belopp-", None,
-         "Innehav", "GOB", "Omkostnad", "Vinst", "Förlust"]
+         "Innehav", "GOB", "Omkostnad", "Vinst", "Förlust", "Ränta"]
     tot_vinst = 0
     tot_förlust = 0
+    tot_ränta = 0
     for valuta in valutor:
         if not valuta in transtable.keys():
             # Alla inbalansvalutor finns kanske inte som transaktioner
@@ -340,7 +359,7 @@ def output_results(sheet, balans, transtable):
                 dekl_sälj_belopp += v[5]
             sheet.cell(row=row, column=7).value = v[4] # Valuta
             sheet.cell(row=row, column=2).number_format = 'YYYY-MM-DD'
-            omkostnad, vinst = konto.update(tx.händelse, tx.antal, tx.belopp)
+            omkostnad, vinst, ränta = konto.update(tx.händelse, tx.antal, tx.belopp)
             sheet.cell(row=row, column=11).value = konto.innehav
             sheet.cell(row=row, column=12).value = konto.gob
             if vinst != None:
@@ -352,6 +371,9 @@ def output_results(sheet, balans, transtable):
                     col = 15
                     tot_förlust += vinst
                 sheet.cell(row=row, column=col).value = vinst
+            if ränta != None:
+                sheet.cell(row=row, column=16).value = ränta
+                tot_ränta += ränta
             sheet.row_dimensions[row].height = ROWHEIGHT
             row += 1
         dsälj, dbelopp, domkostnad, dvinst = konto.get_dekl_vinst()
@@ -378,17 +400,16 @@ def output_results(sheet, balans, transtable):
     row += 1
     sheet.cell(row=row, column=14).value = "TOTALT"
     sheet.cell(row=row, column=14).font = boldfont
-    sheet.cell(row=row+1, column=14).value = "Vinst"
-    sheet.cell(row=row+1, column=15).value = "Förlust"
-    sheet.cell(row=row+1, column=14).font = boldfont
-    sheet.cell(row=row+1, column=15).font = boldfont
-    sheet.cell(row=row+2, column=14).value = tot_vinst
-    sheet.cell(row=row+2, column=15).value = tot_förlust
+    for c in range(3):
+        sheet.cell(row=row+1, column=14+c).value = ["Vinst", "Förlust", "Ränta"][c]
+        sheet.cell(row=row+1, column=14+c).font = boldfont
+        sheet.cell(row=row+2, column=14+c).value = [tot_vinst, tot_förlust, tot_ränta][c]
     for i in range(3):
         sheet.row_dimensions[row+i].height = ROWHEIGHT
     print("Skapat ny flik", SHEET_RESULTAT)
     print("Total vinst:  ", tot_vinst)
     print("Total förlust:", tot_förlust)
+    print("Total ränta:  ", tot_ränta)
 
 # Skriv ut utbalansfliken. Måste köras sist då balansen är uppdaterad med
 # alla transaktioner.
