@@ -423,7 +423,7 @@ def output_utbalans(sheet, balans):
     sheet["A1"].font = boldfont
     for i in range(3):
         sheet.row_dimensions[i+1].height = ROWHEIGHT
-    h = ["Namn","Enhet","Innehav","GOB"]
+    h = ["Namn","Enhet","Innehav","GOB","","Omkostnad"]
     for c in range(1,len(h)+1):
         cell = sheet.cell(row=3, column=c)
         cell.value = h[c-1]
@@ -432,6 +432,7 @@ def output_utbalans(sheet, balans):
     for k in konton:
         for i,v in enumerate(k.getAll()):
             sheet.cell(row=row, column=i+1).value = v
+        sheet.cell(row=row, column=6).value = k.innehav * k.gob
         sheet.row_dimensions[row].height = ROWHEIGHT
         row += 1
     print("Skapat ny flik", SHEET_UTBAL)
