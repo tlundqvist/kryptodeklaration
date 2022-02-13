@@ -78,7 +78,7 @@ class Konto:
         elif händelse == "ränta":
             # Ränta betraktas som köp till aktuell kurs samtidigt som samma
             # belopp ska bokföras som ränteinkomst
-            if antal <= 0 or belopp <= 0:
+            if antal < 0 or belopp < 0:
                 print("Varning: antal eller belopp negativt. Båda bör vara positiva vid ränta!")
             # Ränta ger allt som ränteinkomst direkt
             ränta = belopp
