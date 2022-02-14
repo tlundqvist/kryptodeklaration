@@ -29,7 +29,8 @@ POLICY_GIFT = [
     'referral_bonus',
     'referral_card_cashback',
     'reimbursement',
-    'reimbursement_reverted'
+    'reimbursement_reverted',
+    'rewards_platform_deposit_credited'  # osäker på denna, airdrop?
 ]
 
 # Ränta
@@ -44,6 +45,7 @@ POLICY_OTHER = [
     'crypto_earn_program_withdrawn',  # Retur
     'crypto_exchange',                # Krypto till krypto
     'crypto_viban_exchange',          # Sälj krypto till fiat
+    'crypto_payment',                 # Betala med krypto (sälj krypto)
     'viban_purchase',                 # Köp krypto för fiat
     'card_top_up'                     # Samma som viban_exchange till FIAT
 ]
@@ -112,7 +114,7 @@ def processfile(loggfil, utfil):
                 print(f",,köp,{amount2},{currency2},{amountUSD*usdkurs}", file=f)
             elif kind == 'viban_purchase':
                 print(f"{date},{desc},köp,{amount2},{currency2},{amountUSD*usdkurs}", file=f)
-            elif kind == 'crypto_viban_exchange':
+            elif kind == 'crypto_viban_exchange' or kind == 'crypto_payment':
                 print(f"{date},{desc},sälj,{amount1},{currency1},{amountUSD*usdkurs}", file=f)
             elif kind == 'card_top_up':
                 print(f"{date},{desc},sälj,{amount1},{currency1},{-amountUSD*usdkurs}", file=f)
