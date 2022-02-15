@@ -6,6 +6,7 @@
 # För krypto: coingecko
 
 import sys, json, requests
+from datetime import datetime
 
 # Cachefilen ser t ex
 CACHEFILE = "valutor.json"
@@ -54,32 +55,57 @@ def lookup(datum, valuta):
     valutor = load()
     if not valuta in valutor:
         valutor[valuta] = {}
-    if not datum in valutor[valuta]:
-        if valuta in FIAT:
-            kurs = fetch_fiat(datum, valuta)    # kurs i SEK
-        else:
-            kurs = fetch_crypto(datum, valuta)  # kurs i USD
-        valutor[valuta][datum] = kurs
-    save(valutor)
-    return valutor[valuta][datum]
+        
+    if datum in valutor[valuta]:
+        return valutor[valuta][datum]
     
-def fetch_fiat(datum, valuta):
+    nu = datetime.now().date()
+    dt = datetime.fromisoformat(datum).date()
+    if dt > nu:
+        print("Kan ej fråga om framtiden. Avbryter!")
+        exit(1)
+
+    # Första gången för detta datum
+    if valuta in FIAT:
+        kurs = fetch_fiat(datum, valuta, nu == dt)    # kurs i SEK
+    else:
+        kurs = fetch_crypto(datum, valuta, nu == dt)  # kurs i USD
+        
+    # Spara enbart om historiskt datum, ej dagens datum
+    if datetime.fromisoformat(datum).date() < nu:
+        valutor[valuta][datum] = kurs
+        save(valutor)
+
+    return kurs
+    
+def fetch_fiat(datum, valuta, isToday):
     ''' Returnera kurs i SEK. Exempel: datum="2021-01-01", valuta="usd" '''
-    url = f"https://api.exchangerate.host/convert?from={valuta.upper()}&to=SEK&date={datum}"
-    print("Hämtar kurs från exchangerate.host!")
+    if isToday:
+        url = f"https://api.exchangerate.host/convert?from={valuta.upper()}&to=SEK"
+        print("Hämtar senaste kurs från exchangerate.host!")
+    else:
+        url = f"https://api.exchangerate.host/convert?from={valuta.upper()}&to=SEK&date={datum}"
+        print("Hämtar historisk kurs från exchangerate.host!")
     response = requests.get(url)
     data = response.json()
     return data["result"]
 
-def fetch_crypto(datum, coinid):
+def fetch_crypto(datum, coinid, isToday):
     ''' Returnera kurs i USD. '''
     temp = datum.split("-")
     rev_date = f"{temp[2]}-{temp[1]}-{temp[0]}"
-    url = f"https://api.coingecko.com/api/v3/coins/{coinid}/history?date={rev_date}"
-    print("Hämtar kurs från coingecko.com!")
-    response = requests.get(url)
-    data = response.json()
-    return data['market_data']['current_price']["usd"]
+    if isToday:
+        url = f"https://api.coingecko.com/api/v3/simple/price?ids={coinid}&vs_currencies=usd"
+        print("Hämtar senaste kurs från coingecko.com!")
+        response = requests.get(url)
+        data = response.json()
+        return data[coinid]["usd"]
+    else:
+        url = f"https://api.coingecko.com/api/v3/coins/{coinid}/history?date={rev_date}"
+        print("Hämtar historisk kurs från coingecko.com!")
+        response = requests.get(url)
+        data = response.json()
+        return data['market_data']['current_price']["usd"]
 
 def load():
     """ Läs in redan hämtade valutor från cachefilen. """
