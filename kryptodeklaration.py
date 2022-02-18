@@ -332,6 +332,8 @@ def output_results(sheet, balans, transtable):
             cell = sheet.cell(row=row, column=c+1)
             cell.value = v
             cell.font = boldfont
+            if v not in [valuta, "Datum", "Var", "Händelse", "Valuta"]:
+                cell.alignment = openpyxl.styles.Alignment(horizontal="right")
         sheet.row_dimensions[row].height = ROWHEIGHT
         row += 1
         try:
@@ -347,6 +349,7 @@ def output_results(sheet, balans, transtable):
         for tx in transtable[valuta]:
             v = tx.getAll()
             sheet.cell(row=row, column=2).value = v[0] # Datum
+            sheet.cell(row=row, column=2).alignment = openpyxl.styles.Alignment(horizontal="left")
             sheet.cell(row=row, column=3).value = v[1] # Var
             sheet.cell(row=row, column=4).value = v[2] # Händelse
             if v[3] > 0:
@@ -385,6 +388,8 @@ def output_results(sheet, balans, transtable):
             sheet.cell(row=row, column=14).value = dvinst
             for i in [3, 6, 9, 13, 14]:
                 sheet.cell(row=row, column=i).font = boldfont
+                if i >= 9:
+                    sheet.cell(row=row, column=i).number_format = "0.00"
             row += 1
         dsälj, dbelopp, domkostnad, dvinst = konto.get_dekl_förlust()
         if dvinst < 0:
@@ -395,6 +400,8 @@ def output_results(sheet, balans, transtable):
             sheet.cell(row=row, column=15).value = dvinst
             for i in [3, 6, 9, 13, 14, 15]:
                 sheet.cell(row=row, column=i).font = boldfont
+                if i >= 9:
+                    sheet.cell(row=row, column=i).number_format = "0.00"
             row += 1
         row += 1
     row += 1
@@ -406,6 +413,18 @@ def output_results(sheet, balans, transtable):
         sheet.cell(row=row+2, column=14+c).value = [tot_vinst, tot_förlust, tot_ränta][c]
     for i in range(3):
         sheet.row_dimensions[row+i].height = ROWHEIGHT
+    
+    # Set fairly sensible column widths. Width is expressed as the
+    # number of monospace characters. Will do even for other fonts.
+    sheet.column_dimensions["A"].width = 14
+    sheet.column_dimensions["B"].width = 11
+    sheet.column_dimensions["C"].width = 20
+    sheet.column_dimensions["G"].width = 14
+    for c in "HIMNOP":
+        sheet.column_dimensions[c].width = 11
+        sheet.column_dimensions[c].number_format = "0.00"
+    
+
     print("Skapat ny flik", SHEET_RESULTAT)
     print("Total vinst:  ", tot_vinst)
     print("Total förlust:", tot_förlust)
@@ -435,6 +454,11 @@ def output_utbalans(sheet, balans):
         sheet.cell(row=row, column=6).value = k.innehav * k.gob
         sheet.row_dimensions[row].height = ROWHEIGHT
         row += 1
+    # Set fairly sensible column widths. Width is expressed as the
+    # number of monospace characters. Will do even for other fonts.
+    sheet.column_dimensions["A"].width = 20
+    sheet.column_dimensions["B"].width = 15
+    sheet.column_dimensions["F"].number_format = "0"
     print("Skapat ny flik", SHEET_UTBAL)
 
 
