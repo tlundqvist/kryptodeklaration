@@ -413,6 +413,10 @@ def output_results(sheet, balans, transtable):
         sheet.cell(row=row+2, column=14+c).value = [tot_vinst, tot_förlust, tot_ränta][c]
     for i in range(3):
         sheet.row_dimensions[row+i].height = ROWHEIGHT
+    row += 4
+    sheet.cell(row=row, column=14).value = "SKATT"
+    sheet.cell(row=row, column=14).font = boldfont
+    sheet.cell(row=row+1, column=14).value = (tot_vinst + tot_ränta + tot_förlust*0.7)*0.3
     
     # Set fairly sensible column widths. Width is expressed as the
     # number of monospace characters. Will do even for other fonts.
