@@ -46,6 +46,7 @@ POLICY_OTHER = [
     'crypto_exchange',                # Krypto till krypto
     'crypto_viban_exchange',          # Sälj krypto till fiat
     'crypto_payment',                 # Betala med krypto (sälj krypto)
+    'crypto_payment_refund',          # Återbetala krypto (köp krypto)
     'viban_purchase',                 # Köp krypto för fiat
     'card_top_up'                     # Samma som viban_exchange till FIAT
 ]
@@ -114,8 +115,12 @@ def processfile(loggfil, utfil):
                 print(f",,köp,{amount2},{currency2},{amountUSD*usdkurs}", file=f)
             elif kind == 'viban_purchase':
                 print(f"{date},{desc},köp,{amount2},{currency2},{amountUSD*usdkurs}", file=f)
-            elif kind == 'crypto_viban_exchange' or kind == 'crypto_payment':
+            elif kind == 'crypto_payment_refund':
+                print(f"{date},{desc},köp,{amount1},{currency1},{amountUSD*usdkurs}", file=f)
+            elif kind == 'crypto_viban_exchange':
                 print(f"{date},{desc},sälj,{amount1},{currency1},{amountUSD*usdkurs}", file=f)
+            elif kind == 'crypto_payment':
+                print(f"{date},{desc},sälj,{amount1},{currency1},{-amountUSD*usdkurs}", file=f)
             elif kind == 'card_top_up':
                 print(f"{date},{desc},sälj,{amount1},{currency1},{-amountUSD*usdkurs}", file=f)
             else:
