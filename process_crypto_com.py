@@ -45,9 +45,11 @@ POLICY_OTHER = [
     'crypto_earn_program_withdrawn',  # Retur
     'crypto_exchange',                # Krypto till krypto
     'crypto_viban_exchange',          # Sälj krypto till fiat
+    'card_top_up',                    # Sälj krypto till fiat
     'crypto_payment',                 # Betala med krypto (sälj krypto)
     'crypto_payment_refund',          # Återbetala krypto (köp krypto)
     'viban_purchase',                 # Köp krypto för fiat
+    'nft_payout_credited',            # Köp krypto (men egentligen deposit kanske)
     'card_top_up'                     # Samma som viban_exchange till FIAT
 ]
 
@@ -73,7 +75,7 @@ def processfile(loggfil, utfil):
     print("Datum,Var,Händelse,Antal,Valuta,Belopp", file=f)
     for line in reversed(lines):
         splitted = line.rstrip().split(",")
-        date_time, desc, currency1, amount1, currency2, amount2, _, _, amountUSD, kind = splitted
+        date_time, desc, currency1, amount1, currency2, amount2, _, _, amountUSD, kind, hash = splitted
         if kind in POLICY_IGNORE:
             continue
         date = date_time.split(" ")[0]
@@ -102,7 +104,7 @@ def processfile(loggfil, utfil):
             if kind == 'crypto_earn_program_created':
                 currency2 = "crypto" + currency1
                 amount2 = -amount1
-                amountUSD = -amountUSD
+                amountUSD = amountUSD
                 kind = 'crypto_exchange'
             if kind == 'crypto_earn_program_withdrawn':
                 currency2, amount2 = currency1, amount1
@@ -117,10 +119,12 @@ def processfile(loggfil, utfil):
                 print(f"{date},{desc},köp,{amount2},{currency2},{amountUSD*usdkurs}", file=f)
             elif kind == 'crypto_payment_refund':
                 print(f"{date},{desc},köp,{amount1},{currency1},{amountUSD*usdkurs}", file=f)
-            elif kind == 'crypto_viban_exchange':
+            elif kind == 'nft_payout_credited':
+                print(f"{date},{desc},köp,{amount1},{currency1},{amountUSD*usdkurs}", file=f)
+            elif kind == 'crypto_viban_exchange' or kind == 'card_top_up':
                 print(f"{date},{desc},sälj,{amount1},{currency1},{amountUSD*usdkurs}", file=f)
             elif kind == 'crypto_payment':
-                print(f"{date},{desc},sälj,{amount1},{currency1},{-amountUSD*usdkurs}", file=f)
+                print(f"{date},{desc},sälj,{amount1},{currency1},{amountUSD*usdkurs}", file=f)
             elif kind == 'card_top_up':
                 print(f"{date},{desc},sälj,{amount1},{currency1},{-amountUSD*usdkurs}", file=f)
             else:
