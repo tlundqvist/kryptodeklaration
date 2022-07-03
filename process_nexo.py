@@ -22,6 +22,12 @@ POLICY_IGNORE = [
     'ExchangeDepositedOn'      # Extra onödig?
 ]
 
+# Tolkas som skattefria gåvor, kortköpsåterbäring, typ coop-poäng
+
+POLICY_GIFT = [
+    'Exchange Cashback'        # Gåva, köp för 0 kr
+]
+
 # Ränta
 
 POLICY_INTEREST = [
@@ -34,7 +40,7 @@ POLICY_OTHER = [
     'Deposit',                 # Utlåning
     'Withdrawal',              # Retur
     'Exchange',                # Krypto till krypto, OBS: loggfil brister, hanteras manuellt
-    'DepositToExchange'        # Köp krypto för fiat
+    'DepositToExchange',       # Köp krypto för fiat
 ]
 
 import sys, valuta
@@ -59,49 +65,50 @@ def processfile(loggfil, utfil):
     print("Datum,Var,Händelse,Antal,Valuta,Belopp", file=f)
     for line in reversed(lines):
         splitted = line.rstrip().split(",")
-        _, kind, currency1, amount1, amountUSD, desc, _, date_time = splitted
+        _, kind, currency1, amount1, currency2, amount2, amountUSD, desc, _, date_time = splitted
         if kind in POLICY_IGNORE:
             continue
         date = date_time.split(" ")[0]
         if currency1 == "NEXONEXO":
             currency1 = "NEXO"
 
-        if kind == 'Exchange':
-            print("Varning: hantera Exchange manuellt, loggfil saknar information:")
-            print("  ", date, kind, amount1, currency1)
-            continue
-        
-        amount2 = 0.0
-        amount1, amountUSD = [float(amount1), float(amountUSD[1:])]
+        amount1, amount2, amountUSD = (float(amount1), float(amount2), float(amountUSD[1:]))
 
-        if kind in POLICY_INTEREST:
+        usdkurs = valuta.lookup(date, "usd")
+        amountSEK = amountUSD*usdkurs
+        
+        if kind in POLICY_GIFT:
+            # Skattefritt köp till aktuell kurs, utgå från USD och omvandla till SEK
+            print(f"{date},{kind},köp,{amount1},nexo{currency1},{amountSEK}", file=f)
+        elif kind in POLICY_INTEREST:
             # Ska bli ränta i redovisningen, räntan kommer på nexo-skuldvalutan
-            usdkurs = valuta.lookup(date, "usd")
             print(f"{date},{kind},ränta," +
-                  f"{amount1},nexo{currency1},{amountUSD*usdkurs},,{desc}", file=f)
-            
+                  f"{amount1},nexo{currency1},{amountSEK},,{desc}", file=f)
         elif kind in POLICY_OTHER:
             # Deposit, växling till konstgjord valuta
-            usdkurs = valuta.lookup(date, "usd")
             if kind == 'Deposit':
                 amount1 = -amount1
                 currency2 = "nexo" + currency1
                 amount2 = -amount1
                 amountUSD = amountUSD
-                print(f"{date},{kind},sälj,{amount1},{currency1},{amountUSD*usdkurs}" +
+                print(f"{date},{kind},sälj,{amount1},{currency1},{amountSEK}" +
                       f",,{desc}", file=f)
-                print(f",,köp,{amount2},{currency2},{amountUSD*usdkurs}", file=f)
+                print(f",,köp,{amount2},{currency2},{amountSEK}", file=f)
             elif kind == 'Withdrawal':
                 currency2, amount2 = currency1, -amount1
                 currency1 = "nexo" + currency2
-                print(f"{date},{kind},sälj,{amount1},{currency1},{amountUSD*usdkurs}" +
+                print(f"{date},{kind},sälj,{amount1},{currency1},{amountSEK}" +
                       f",,{desc}", file=f)
-                print(f",,köp,{amount2},{currency2},{amountUSD*usdkurs}", file=f)
+                print(f",,köp,{amount2},{currency2},{amountSEK}", file=f)
             elif kind == 'DepositToExchange':
                 # Om EUR så ska det nog inte hanteras som krypto men enklast att
                 # hantera det som allt annat
-                print(f"{date},{kind},köp,{amount1},nexo{currency1},{amountUSD*usdkurs}" +
+                print(f"{date},{kind},köp,{amount1},nexo{currency1},{amountSEK}" +
                       f",,{desc}", file=f)
+            elif kind == 'Exchange':
+                # Växling
+                print(f"{date},{kind},sälj,{amount1},nexo{currency1},{amountSEK}", file=f)
+                print(f",,köp,{amount2},nexo{currency2},{amountSEK}", file=f)
             else:
                 raise Exception("Okänd POLICY_OTHER:", kind)
         else:
