@@ -42,23 +42,24 @@ class Konto:
     def getAll(self):
         return [self.namn, self.enhet, self.innehav, self.gob]
     
-    def update(self, händelse, antal, belopp):
+    def update(self, datum, händelse, antal, belopp):
         vinst = None
         omkostnad = None
         ränta = None
         if händelse == "köp":
-            if antal <= 0:
-                print("Varning: antal mindre eller lika med noll vid köp!")
+            if antal < 0:
+                print("Varning, antal mindre än noll vid köp.", self.enhet, datum)
             self._totbelopp += belopp
             self.innehav += antal
             self.gob = self._totbelopp / self.innehav
         elif händelse == "sälj":
             if antal > 0:
-                print("Varning: antal positivt vid sälj! Säljantal ska vara negativt.")
+                print("Varning, antal positivt vid sälj! Säljantal ska vara negativt.",
+                      self.enhet, datum)
             self.innehav += antal   # antal redan < 0 vid sälj
             if self.innehav < 0:
                 print("Innehav:", self.innehav, "efter", händelse, antal, belopp)
-                sys.exit("Error: innehav < 0 för " + self.enhet)
+                sys.exit("Error: innehav < 0 för " + self.enhet, datum)
             omkostnad = -antal * self.gob
             vinst = belopp - omkostnad
             self._totbelopp = self.innehav * self.gob
@@ -79,7 +80,8 @@ class Konto:
             # Ränta betraktas som köp till aktuell kurs samtidigt som samma
             # belopp ska bokföras som ränteinkomst
             if antal < 0 or belopp < 0:
-                print("Varning: antal eller belopp negativt. Båda bör vara positiva vid ränta!")
+                print("Varning: antal eller belopp negativt. Båda bör vara positiva vid ränta!",
+                      self.enhet, datum)
             # Ränta ger allt som ränteinkomst direkt
             ränta = belopp
             self._dekl_ränta += ränta
@@ -88,7 +90,7 @@ class Konto:
             self.innehav += antal
             self.gob = self._totbelopp / self.innehav
         else:
-            sys.exit("Error: okänd händelse i transaktion: " + händelse)
+            sys.exit("Error: okänd händelse i transaktion: " + händelse + " " + datum)
         return omkostnad, vinst, ränta
 
     def get_dekl_vinst(self):
@@ -362,7 +364,7 @@ def output_results(sheet, balans, transtable):
                 dekl_sälj_belopp += v[5]
             sheet.cell(row=row, column=7).value = v[4] # Valuta
             sheet.cell(row=row, column=2).number_format = 'YYYY-MM-DD'
-            omkostnad, vinst, ränta = konto.update(tx.händelse, tx.antal, tx.belopp)
+            omkostnad, vinst, ränta = konto.update(tx.datum, tx.händelse, tx.antal, tx.belopp)
             sheet.cell(row=row, column=11).value = konto.innehav
             sheet.cell(row=row, column=12).value = konto.gob
             if vinst != None:
