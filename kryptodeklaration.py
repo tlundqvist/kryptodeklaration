@@ -59,7 +59,7 @@ class Konto:
             self.innehav += antal   # antal redan < 0 vid sälj
             if self.innehav < 0:
                 print("Innehav:", self.innehav, "efter", händelse, antal, belopp)
-                sys.exit("Error: innehav < 0 för " + self.enhet + " " + datum)
+                sys.exit("Error: innehav < 0 för " + self.enhet + " " + str(datum))
             omkostnad = -antal * self.gob
             vinst = belopp - omkostnad
             self._totbelopp = self.innehav * self.gob
