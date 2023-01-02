@@ -262,6 +262,8 @@ def read_transactions(sheet):
                 if valuta == "ETH":
                     valuta = "mETH"
                     antal *= 1000
+                if belopp < 0:
+                    sys.exit("Error: belopp negativt eller 0, " + str(row[0:5]))
                 trans = Transaktion(datum, var, händelse, antal, valuta, belopp)
                 translist.append(trans)
             except (TypeError, ValueError):
