@@ -44,6 +44,7 @@ POLICY_OTHER = [
     'crypto_earn_program_created',    # Utlåning
     'crypto_earn_program_withdrawn',  # Retur
     'crypto_exchange',                # Krypto till krypto
+    'recurring_buy_order',            # Samma som viban_purchase, köp krypto
     'crypto_viban_exchange',          # Sälj krypto till fiat
     'card_top_up',                    # Sälj krypto till fiat
     'crypto_payment',                 # Betala med krypto (sälj krypto)
@@ -91,7 +92,7 @@ def processfile(loggfil, utfil):
             else:
                 # Egentligen en korrigering av tidigare "Köp", men köp får ej vara negativt
                 # Hantera som sälj (försummbara belopp ändå)
-                print(f"{date},{desc},sälj,{amount1},{currency1},{-amountUSD*usdkurs}", file=f)
+                print(f"{date},{desc},sälj,{amount1},{currency1},{amountUSD*usdkurs}", file=f)
 
         elif kind in POLICY_INTEREST:
             # Ska bli ränta i redovisningen
@@ -115,7 +116,7 @@ def processfile(loggfil, utfil):
             if kind == 'crypto_exchange':
                 print(f"{date},{desc},sälj,{amount1},{currency1},{amountUSD*usdkurs}", file=f)
                 print(f",,köp,{amount2},{currency2},{amountUSD*usdkurs}", file=f)
-            elif kind == 'viban_purchase':
+            elif kind == 'viban_purchase' or kind == 'recurring_buy_order':
                 print(f"{date},{desc},köp,{amount2},{currency2},{amountUSD*usdkurs}", file=f)
             elif kind == 'crypto_payment_refund':
                 print(f"{date},{desc},köp,{amount1},{currency1},{amountUSD*usdkurs}", file=f)

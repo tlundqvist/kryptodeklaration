@@ -39,6 +39,7 @@ POLICY_INTEREST = [
 POLICY_OTHER = [    
     'Deposit',                 # Utlåning
     'Withdrawal',              # Retur
+    'TransferToProWallet',     # Samma som retur/withdrawal
     'Exchange',                # Krypto till krypto, OBS: loggfil brister, hanteras manuellt
     'DepositToExchange',       # Köp krypto för fiat
 ]
@@ -65,7 +66,7 @@ def processfile(loggfil, utfil):
     print("Datum,Var,Händelse,Antal,Valuta,Belopp", file=f)
     for line in reversed(lines):
         splitted = line.rstrip().split(",")
-        _, kind, currency1, amount1, currency2, amount2, amountUSD, desc, _, date_time = splitted
+        _, kind, currency1, amount1, currency2, amount2, amountUSD, desc, date_time = splitted
         if kind in POLICY_IGNORE:
             continue
         date = date_time.split(" ")[0]
@@ -94,7 +95,7 @@ def processfile(loggfil, utfil):
                 print(f"{date},{kind},sälj,{amount1},{currency1},{amountSEK}" +
                       f",,{desc}", file=f)
                 print(f",,köp,{amount2},{currency2},{amountSEK}", file=f)
-            elif kind == 'Withdrawal':
+            elif kind == 'Withdrawal' or kind == 'TransferToProWallet':
                 currency2, amount2 = currency1, -amount1
                 currency1 = "nexo" + currency2
                 print(f"{date},{kind},sälj,{amount1},{currency1},{amountSEK}" +
