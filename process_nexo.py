@@ -40,6 +40,7 @@ POLICY_OTHER = [
     'Deposit',                 # Utlåning
     'Withdrawal',              # Retur
     'TransferToProWallet',     # Samma som retur/withdrawal
+    'TransferFromProWallet',   # Samma som utlåning/deposit
     'Exchange',                # Krypto till krypto, OBS: loggfil brister, hanteras manuellt
     'DepositToExchange',       # Köp krypto för fiat
 ]
@@ -87,7 +88,7 @@ def processfile(loggfil, utfil):
                   f"{amount1},nexo{currency1},{amountSEK},,{desc}", file=f)
         elif kind in POLICY_OTHER:
             # Deposit, växling till konstgjord valuta
-            if kind == 'Deposit':
+            if kind == 'Deposit' or kind == 'TransferFromProWallet':
                 amount1 = -amount1
                 currency2 = "nexo" + currency1
                 amount2 = -amount1
