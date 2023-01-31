@@ -105,7 +105,7 @@ def processfile(loggfil, utfil):
             elif kind == 'DepositToExchange':
                 # Om EUR så ska det nog inte hanteras som krypto men enklast att
                 # hantera det som allt annat
-                print(f"{date},{kind},köp,{amount1},nexo{currency1},{amountSEK}" +
+                print(f"{date},{kind},köp,{amount2},nexo{currency2},{amountSEK}" +
                       f",,{desc}", file=f)
             elif kind == 'Exchange':
                 # Växling
