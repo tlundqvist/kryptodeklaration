@@ -8,6 +8,9 @@
 import sys, json, requests
 from datetime import datetime
 
+# Måste registrera sig och få nyckel nuförtiden på exchangerate.host:
+from valuta_apikeys import APIKEY_EXCHANGERATE_HOST
+
 # Cachefilen ser t ex
 CACHEFILE = "valutor.json"
 COINLIST = "coinlist.json"   # list.json från coingecko, symbol -> id
@@ -80,11 +83,11 @@ def lookup(datum, valuta):
     
 def fetch_fiat(datum, valuta, isToday):
     ''' Returnera kurs i SEK. Exempel: datum="2021-01-01", valuta="usd" '''
+    url = f"http://api.exchangerate.host/convert?amount=1&from={valuta.upper()}&to=SEK&access_key={APIKEY_EXCHANGERATE_HOST}"
     if isToday:
-        url = f"https://api.exchangerate.host/convert?from={valuta.upper()}&to=SEK"
         print("Hämtar senaste kurs från exchangerate.host!")
     else:
-        url = f"https://api.exchangerate.host/convert?from={valuta.upper()}&to=SEK&date={datum}"
+        url += f"&date={datum}"
         print("Hämtar historisk kurs från exchangerate.host!")
     response = requests.get(url)
     data = response.json()
