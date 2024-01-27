@@ -29,6 +29,7 @@ class Konto:
         self._totbelopp = innehav * gob
         # Summeringar för deklaration, dela upp vinst och förlust på två poster
         # Ränteinkomster redovisas separat
+        # Kapitalinkomst samma regler som ränta men redovisas på vinst
         self._dekl_vinst_sälj = 0
         self._dekl_vinst_sälj_belopp = 0
         self._dekl_vinst_omkostnad = 0
@@ -85,6 +86,19 @@ class Konto:
             # Ränta ger allt som ränteinkomst direkt
             ränta = belopp
             self._dekl_ränta += ränta
+            # Därefter samma som köp
+            self._totbelopp += belopp
+            self.innehav += antal
+            self.gob = self._totbelopp / self.innehav
+        elif händelse == "kapitalinkomst":
+            # Kapitalinkomst betraktas som ränta, dvs köp till aktuell kurs samtidigt som samma
+            # belopp ska bokföras som vinst
+            if antal < 0 or belopp < 0:
+                print("Varning: antal eller belopp negativt. Båda bör vara positiva vid kapitalinkomst!",
+                      self.enhet, datum)
+            # Kapitalinkomst ger allt som inkomst direkt
+            vinst = belopp
+            self._dekl_vinst += vinst
             # Därefter samma som köp
             self._totbelopp += belopp
             self.innehav += antal
