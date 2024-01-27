@@ -122,7 +122,7 @@ def processfile(loggfil, utfil):
                 print(f"{date},{desc},köp,{amount1},{currency1},{amountUSD*usdkurs}", file=f)
             elif kind == 'nft_payout_credited':
                 print(f"{date},{desc},köp,{amount1},{currency1},{amountUSD*usdkurs}", file=f)
-            elif kind == 'crypto_viban_exchange' or kind == 'card_top_up':
+            elif kind == 'crypto_viban_exchange':
                 print(f"{date},{desc},sälj,{amount1},{currency1},{amountUSD*usdkurs}", file=f)
             elif kind == 'crypto_payment':
                 print(f"{date},{desc},sälj,{amount1},{currency1},{amountUSD*usdkurs}", file=f)
