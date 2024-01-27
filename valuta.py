@@ -7,12 +7,12 @@
 
 import sys, json, requests
 from datetime import datetime
-
-# Måste registrera sig och få nyckel nuförtiden på exchangerate.host:
-from valuta_apikeys import APIKEY_EXCHANGERATE_HOST
+from valuta_apikeys import APIKEY_CURRENCYBEACON
 
 # Cachefilen ser t ex
 CACHEFILE = "valutor.json"
+
+# https://api.coingecko.com/api/v3/coins/list
 COINLIST = "coinlist.json"   # list.json från coingecko, symbol -> id
 
 FIAT = ["usd", "eur", "gbp"]
@@ -80,8 +80,29 @@ def lookup(datum, valuta):
         save(valutor)
 
     return kurs
-    
+
+# Ny med currencybeacon.com istället!
+# Supported currencies: https://currencybeacon.com/supported-currencies
+
 def fetch_fiat(datum, valuta, isToday):
+    ''' Returnera kurs i SEK. Exempel: datum="2021-01-01", valuta="usd" '''
+    url = "http://api.currencybeacon.com/v1/"
+    url2 = f"?base={valuta.upper()}&symbols=SEK&api_key={APIKEY_CURRENCYBEACON}"
+    if isToday:
+        url += "latest" + url2
+        print("Hämtar senaste kurs från currencybeacon!")
+    else:
+        url += "historical" + url2 + f"&date={datum}"
+        print("Hämtar historisk kurs från currencybeacon!")
+    response = requests.get(url)
+    data = response.json()
+    if not "response" in data:
+        print(data)
+        sys.exit(1)
+    return data["response"]["rates"]["SEK"]
+
+# Gammal: rate limit 100/month
+def fetch_fiat_exchangeratehost(datum, valuta, isToday):
     ''' Returnera kurs i SEK. Exempel: datum="2021-01-01", valuta="usd" '''
     url = f"http://api.exchangerate.host/convert?amount=1&from={valuta.upper()}&to=SEK&access_key={APIKEY_EXCHANGERATE_HOST}"
     if isToday:
@@ -91,6 +112,9 @@ def fetch_fiat(datum, valuta, isToday):
         print("Hämtar historisk kurs från exchangerate.host!")
     response = requests.get(url)
     data = response.json()
+    if "error" in data:
+        print(data["error"])
+        sys.exit(1)
     return data["result"]
 
 def fetch_crypto(datum, coinid, isToday):
@@ -108,6 +132,8 @@ def fetch_crypto(datum, coinid, isToday):
         print("Hämtar historisk kurs från coingecko.com!")
         response = requests.get(url)
         data = response.json()
+        if not 'market_data' in data:
+            print("Unknown error:", data)
         return data['market_data']['current_price']["usd"]
 
 def load():
