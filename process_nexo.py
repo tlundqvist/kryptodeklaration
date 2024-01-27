@@ -17,9 +17,9 @@
 # Olika Transaction Type:
 
 POLICY_IGNORE = [
-    'LockingTermDeposit',
-    'UnlockingTermDeposit',
-    'ExchangeDepositedOn'      # Extra onödig?
+    'Locking Term Deposit',
+    'Unlocking Term Deposit',
+    'Exchange Deposited On'      # Extra onödig?
 ]
 
 # Tolkas som skattefria gåvor, kortköpsåterbäring, typ coop-poäng
@@ -32,17 +32,17 @@ POLICY_GIFT = [
 
 POLICY_INTEREST = [
     'Interest',
-    'FixedTermInterest',
+    'Fixed Term Interest',
     'Dividend'
 ]
 
 POLICY_OTHER = [    
-    'Deposit',                 # Utlåning
-    'Withdrawal',              # Retur
-    'TransferToProWallet',     # Samma som retur/withdrawal
-    'TransferFromProWallet',   # Samma som utlåning/deposit
-    'Exchange',                # Krypto till krypto, OBS: loggfil brister, hanteras manuellt
-    'DepositToExchange',       # Köp krypto för fiat
+    'Deposit',                   # Utlåning
+    'Withdrawal',                # Retur
+    'Transfer To Pro Wallet',    # Samma som retur/withdrawal
+    'Transfer From Pro Wallet',  # Samma som utlåning/deposit
+    'Exchange',                  # Krypto till krypto, OBS: loggfil brister, hanteras manuellt
+    'Deposit To Exchange',       # Köp krypto för fiat
 ]
 
 import sys, valuta
@@ -88,7 +88,7 @@ def processfile(loggfil, utfil):
                   f"{amount1},nexo{currency1},{amountSEK},,{desc}", file=f)
         elif kind in POLICY_OTHER:
             # Deposit, växling till konstgjord valuta
-            if kind == 'Deposit' or kind == 'TransferFromProWallet':
+            if kind == 'Deposit' or kind == 'Transfer From Pro Wallet':
                 amount1 = -amount1
                 currency2 = "nexo" + currency1
                 amount2 = -amount1
@@ -96,13 +96,13 @@ def processfile(loggfil, utfil):
                 print(f"{date},{kind},sälj,{amount1},{currency1},{amountSEK}" +
                       f",,{desc}", file=f)
                 print(f",,köp,{amount2},{currency2},{amountSEK}", file=f)
-            elif kind == 'Withdrawal' or kind == 'TransferToProWallet':
+            elif kind == 'Withdrawal' or kind == 'Transfer To Pro Wallet':
                 currency2, amount2 = currency1, -amount1
                 currency1 = "nexo" + currency2
                 print(f"{date},{kind},sälj,{amount1},{currency1},{amountSEK}" +
                       f",,{desc}", file=f)
                 print(f",,köp,{amount2},{currency2},{amountSEK}", file=f)
-            elif kind == 'DepositToExchange':
+            elif kind == 'Deposit To Exchange':
                 # Om EUR så ska det nog inte hanteras som krypto men enklast att
                 # hantera det som allt annat
                 print(f"{date},{kind},köp,{amount2},nexo{currency2},{amountSEK}" +
