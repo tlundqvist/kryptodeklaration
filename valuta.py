@@ -7,7 +7,7 @@
 
 import sys, json, requests
 from datetime import datetime
-from valuta_apikeys import APIKEY_CURRENCYBEACON
+from valuta_apikeys import APIKEY_CURRENCYBEACON, APIKEY_COINGECKO
 
 # Cachefilen ser t ex
 CACHEFILE = "valutor.json"
@@ -122,13 +122,13 @@ def fetch_crypto(datum, coinid, isToday):
     temp = datum.split("-")
     rev_date = f"{temp[2]}-{temp[1]}-{temp[0]}"
     if isToday:
-        url = f"https://api.coingecko.com/api/v3/simple/price?ids={coinid}&vs_currencies=usd"
+        url = f"https://api.coingecko.com/api/v3/simple/price?ids={coinid}&vs_currencies=usd&x_cg_demo_api_key={APIKEY_COINGECKO}"
         print("Hämtar senaste kurs från coingecko.com!")
         response = requests.get(url)
         data = response.json()
         return data[coinid]["usd"]
     else:
-        url = f"https://api.coingecko.com/api/v3/coins/{coinid}/history?date={rev_date}"
+        url = f"https://api.coingecko.com/api/v3/coins/{coinid}/history?date={rev_date}&x_cg_demo_api_key={APIKEY_COINGECKO}"
         print("Hämtar historisk kurs från coingecko.com!")
         response = requests.get(url)
         data = response.json()
