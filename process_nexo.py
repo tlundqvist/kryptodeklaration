@@ -38,6 +38,7 @@ POLICY_INTEREST = [
 
 POLICY_OTHER = [    
     'Deposit',                   # Utlåning
+    'Top up Crypto',             # samma som Deposit
     'Withdrawal',                # Retur
     'Transfer To Pro Wallet',    # Samma som retur/withdrawal
     'Transfer From Pro Wallet',  # Samma som utlåning/deposit
@@ -88,7 +89,7 @@ def processfile(loggfil, utfil):
                   f"{amount1},nexo{currency1},{amountSEK},,{desc}", file=f)
         elif kind in POLICY_OTHER:
             # Deposit, växling till konstgjord valuta
-            if kind == 'Deposit' or kind == 'Transfer From Pro Wallet':
+            if kind == 'Deposit' or kind == 'Top up Crypto' or kind == 'Transfer From Pro Wallet':
                 amount1 = -amount1
                 currency2 = "nexo" + currency1
                 amount2 = -amount1
