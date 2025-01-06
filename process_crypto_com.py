@@ -19,9 +19,15 @@ POLICY_IGNORE = [
     'crypto_withdrawal',
     'dust_conversion_credited',
     'dust_conversion_debited',
-    'lockup_upgrade'                # tolkas som ej utlåning, ingen skattehändelse
+    'lockup_upgrade',               # tolkas som ej utlåning, ingen skattehändelse
+    'lockup_unlock',
+    'finance.lockup.dpos_lock.crypto_wallet'
 ]
 
+POLICY_IGNORE_WARN = [
+    'crypto_wallet_swap_debited',   # tekniska swaps, kanske inte skattehändelser?
+    'crypto_wallet_swap_credited'
+]
 # Tolkas som skattefria gåvor, kortköpsåterbäring, typ coop-poäng
 
 POLICY_GIFT = [
@@ -30,14 +36,17 @@ POLICY_GIFT = [
     'referral_card_cashback',
     'reimbursement',
     'reimbursement_reverted',
-    'rewards_platform_deposit_credited'  # osäker på denna, airdrop?
+    'rewards_platform_deposit_credited',  # osäker på denna, airdrop?
+    'reward.loyalty_program.trading_rebate.crypto_wallet'
 ]
 
 # Ränta
 
 POLICY_INTEREST = [
     'crypto_earn_interest_paid',
-    'mco_stake_reward'
+    'mco_stake_reward',
+    'finance.lockup.dpos_compound_interest.crypto_wallet',
+    'campaign_reward'
 ]
 
 POLICY_OTHER = [    
@@ -78,6 +87,9 @@ def processfile(loggfil, utfil):
         splitted = line.rstrip().split(",")
         date_time, desc, currency1, amount1, currency2, amount2, _, _, amountUSD, kind, hash = splitted
         if kind in POLICY_IGNORE:
+            continue
+        if kind in POLICY_IGNORE_WARN:
+            print(f"Varning: kolla manuellt", date_time, desc, kind)
             continue
         date = date_time.split(" ")[0]
         if amount2 == '':
