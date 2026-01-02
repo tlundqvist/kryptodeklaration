@@ -99,17 +99,18 @@ def processfile(loggfil, utfil):
         if kind in POLICY_GIFT:
             # Skattefritt köp till aktuell kurs, utgå från USD och omvandla till SEK
             usdkurs = valuta.lookup(date, "usd")
+            amountSEK = round(amountUSD*usdkurs,2)
             if amount1 >= 0:
-                print(f"{date},{desc},köp,{amount1},{currency1},{amountUSD*usdkurs}", file=f)
+                print(f"{date},{desc},köp,{amount1},{currency1},{amountSEK}", file=f)
             else:
                 # Egentligen en korrigering av tidigare "Köp", men köp får ej vara negativt
                 # Hantera som sälj (försummbara belopp ändå)
-                print(f"{date},{desc},sälj,{amount1},{currency1},{amountUSD*usdkurs}", file=f)
+                print(f"{date},{desc},sälj,{amount1},{currency1},{amountSEK}", file=f)
 
         elif kind in POLICY_INTEREST:
             # Ska bli ränta i redovisningen
             usdkurs = valuta.lookup(date, "usd")
-            print(f"{date},{desc},ränta,{amount1},{currency1},{amountUSD*usdkurs}", file=f)
+            print(f"{date},{desc},ränta,{amount1},{currency1},{amountSEK}", file=f)
             
         elif kind in POLICY_OTHER:
             # Utlåning till earn, växling till konstgjord valuta
@@ -126,20 +127,20 @@ def processfile(loggfil, utfil):
                 kind = 'crypto_exchange'
                 
             if kind == 'crypto_exchange':
-                print(f"{date},{desc},sälj,{amount1},{currency1},{amountUSD*usdkurs}", file=f)
-                print(f",,köp,{amount2},{currency2},{amountUSD*usdkurs}", file=f)
+                print(f"{date},{desc},sälj,{amount1},{currency1},{amountSEK}", file=f)
+                print(f",,köp,{amount2},{currency2},{amountSEK}", file=f)
             elif kind == 'viban_purchase' or kind == 'recurring_buy_order':
-                print(f"{date},{desc},köp,{amount2},{currency2},{amountUSD*usdkurs}", file=f)
+                print(f"{date},{desc},köp,{amount2},{currency2},{amountSEK}", file=f)
             elif kind == 'crypto_payment_refund':
-                print(f"{date},{desc},köp,{amount1},{currency1},{amountUSD*usdkurs}", file=f)
+                print(f"{date},{desc},köp,{amount1},{currency1},{amountSEK}", file=f)
             elif kind == 'nft_payout_credited':
-                print(f"{date},{desc},köp,{amount1},{currency1},{amountUSD*usdkurs}", file=f)
+                print(f"{date},{desc},köp,{amount1},{currency1},{amountSEK}", file=f)
             elif kind == 'crypto_viban_exchange':
-                print(f"{date},{desc},sälj,{amount1},{currency1},{amountUSD*usdkurs}", file=f)
+                print(f"{date},{desc},sälj,{amount1},{currency1},{amountSEK}", file=f)
             elif kind == 'crypto_payment':
-                print(f"{date},{desc},sälj,{amount1},{currency1},{amountUSD*usdkurs}", file=f)
+                print(f"{date},{desc},sälj,{amount1},{currency1},{amountSEK}", file=f)
             elif kind == 'card_top_up':
-                print(f"{date},{desc},sälj,{amount1},{currency1},{-amountUSD*usdkurs}", file=f)
+                print(f"{date},{desc},sälj,{amount1},{currency1},{-amountSEK}", file=f)
             else:
                 raise Exception("Okänd POLICY_OTHER:", kind)
         else:
