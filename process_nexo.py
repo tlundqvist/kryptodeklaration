@@ -68,7 +68,10 @@ def processfile(loggfil, utfil):
     print("Datum,Var,Händelse,Antal,Valuta,Belopp", file=f)
     for line in reversed(lines):
         splitted = line.rstrip().split(",")
-        _, kind, currency1, amount1, currency2, amount2, amountUSD, desc, date_time = splitted
+        _, kind, currency1, amount1, currency2, amount2, amountUSD, fee, currencyFee, desc, date_time = splitted
+        if fee != "-":
+            # Fee inräknad redan så förmodligen behövs ingen åtgärd
+            print("Varning fee:", fee, currencyFee, "dubbelkolla kanske", date_time)
         if kind in POLICY_IGNORE:
             continue
         date = date_time.split(" ")[0]
@@ -78,7 +81,7 @@ def processfile(loggfil, utfil):
         amount1, amount2, amountUSD = (float(amount1), float(amount2), float(amountUSD[1:]))
 
         usdkurs = valuta.lookup(date, "usd")
-        amountSEK = amountUSD*usdkurs
+        amountSEK = round(amountUSD*usdkurs,2)
         
         if kind in POLICY_GIFT:
             # Skattefritt köp till aktuell kurs, utgå från USD och omvandla till SEK
