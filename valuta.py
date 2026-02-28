@@ -38,6 +38,17 @@ def main():
             usd = lookup(datum, "usd")
             print("Kurs:", k, "USD,", k*usd, "SEK")
     
+def translate(symbol):
+    ''' Returnera första matchande CoinGecko coin-id för en tokensymbol (ex "gno" -> "gnosis").
+        Returnerar symbol oförändrad om ingen match hittas.
+    '''
+    with open(COINLIST) as f:
+        cl = json.load(f)
+    for coin in cl:
+        if coin["symbol"] == symbol.lower():
+            return coin["id"]
+    return symbol.lower()
+
 def symbol_to_coinid(valutasymbol):
     ''' Lista matchande coinid baserat på list.json från coingecko.
         Ex: [{"id":"01coin","symbol":"zoc","name":"01coin"},...]
