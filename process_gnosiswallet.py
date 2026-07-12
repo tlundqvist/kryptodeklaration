@@ -18,7 +18,7 @@ from collections import defaultdict
 UTFIL = "resultat_gnosiswallet.csv"
 
 
-CRC_VARIANTER = {"CRC", "gCRC", "s-gCRC", "s-METESTSUP"}
+CRC_VARIANTER = {"CRC", "gCRC", "s-gCRC", "s-METESTSUP", "ERC20 ***"}
 
 def normalisera_symbol(sym):
     return "CRC" if sym in CRC_VARIANTER else sym
@@ -93,6 +93,10 @@ def processfile(loggfil, utfil):
                 amount = parse_amount(row["TokenValue"])
                 usd = parse_usd(row["USDValueDayOfTx"])
 
+                # skip old EURe emoney
+                if row["ContractAddress"] == "0xcb444e90d8198415266c6a2724b7900fb12fc56e":
+                    continue
+                
                 if to_addr == my_addr:
                     net[symbol] += amount
                     if usd is not None:
